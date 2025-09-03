@@ -1,0 +1,92 @@
+# Quarto render output
+*.html
+*.pdf
+*.docx
+*.pptx
+*.epub
+*.tex
+*.aux
+*.log
+*.out
+*.toc
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+
+# Quarto cache and freeze
+/.quarto/
+*_cache/
+*_files/
+/.jupyter_cache/
+/__pycache__/
+
+# Rendered site directories
+_site/
+_book/
+docs/
+
+# Jupyter notebook outputs (if converting)
+*.ipynb
+
+# R specific
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Julia specific
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+deps/deps.jl
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Keep only source files
+# This gitignore will preserve:
+# - *.qmd files (your main source)
+# - *.yml / *.yaml (configuration)
+# - *.bib (bibliography)
+# - *.csl (citation styles)
+# - data/ folder contents
+# - images/ folder contents (if you reference them)
+
+# If you want to ignore specific output directories but keep others,
+# you can comment out the lines above and use specific patterns like:
+# _site/
+# _book/
+# dist/
