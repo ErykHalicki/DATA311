@@ -7,6 +7,7 @@ format:
   html:
     toc: true
     embed-resources: true
+    #(1 point) , modify your YAML to change how your data frame is printed by following the instructions here: https://quarto.org/docs/computations/r.html#data-frames (I use the paged option for lecture slides).
     df-print: paged
 editor: visual
 ---
@@ -18,28 +19,49 @@ Hey, my name is **Eryk Halicki**, I'm a third year CS student at UBCO. I'm curre
 Above is a photo of my clubs robot / AUV (autonomous underwater vehicle) from 2024.
 
 ```{r, echo=FALSE, warning=FALSE,message=FALSE}
+#(1 point) Load in the tidyverse package. Be sure to follow the best practices as described in class/lab.
+#(1 point) When you load this package, several startup messages are printed to the screen. Edit the code chunk options so these messages are suppressed.
 library(tidyverse)
 ```
 
 ```{r}
+# (2 points) Download the data CSV file from https://irene.vrbik.ok.ubc.ca/data/sales_data.csv and save it in a subdirectory within your assignment folder (refer to Lab 0 for recommended folder setup). Load the dataset into R using a relative path and save it to an R object (naming of your choice).
 sales_data <- read.csv("/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/sales_data.csv")
+
+#(1 point) Display a preview of your data by using the head() and str() functions on your data frame.
 head(sales_data)
 str(sales_data)
+
 #(1 point) Identify and remove any duplicate rows in the dataset using appropriate R functions.
 unique_sales_data <- unique(sales_data)
+
 #(1 point) Check for missing values in the dataset.
 anyNA(unique_sales_data)
+
 #(1 point) Filter the dataset to display only the sales made in New York.
 new_york_sales <- filter(unique_sales_data, Store.Location == "New York")
 new_york_sales
 #(1 point) Identify the date on which the highest total sale was recorded in New York.
 sorted_new_york_sales <- arrange(new_york_sales, desc(Total.Sales))
-sorted_new_york_sales[1,]["Date"]
+highest_sale_date <- sorted_new_york_sales[1,]$Date
+sprintf("Largest sale in New York occured on: %s", highest_sale_date)
+
 #(1 point) Determine the most frequently used payment method by customers.
+# referenced https://stackoverflow.com/questions/2547402/how-to-find-the-statistical-mode for mode calculation
 payment_methods <- select(unique_sales_data, Payment.Method)
 unique_payment_methods <- unique(payment_methods)
-match(payment_methods, unique_payment_methods)
-# referenced https://stackoverflow.com/questions/2547402/how-to-find-the-statistical-mode
+
+mode_payment_method <- unique_payment_methods[which.max(tabulate(match(payment_methods$Payment.Method, unique_payment_methods$Payment.Method))),]
+
+sprintf("%s is the most common payment method", mode_payment_method)
+
+#(2 points) Create a histogram of Customer Age and label the x-axis as “Customer Age”. Adjust the plot dimensions so that it is taller than it is wide.
+
+#(2 points) Create a scatter plot with Quantity Sold on the x-axis and Price on the y-axis. Ensure that all axis labels are clear and readable. Title the plot “Relationship between Quantity and Price” and label the chunk using the naming convention that facilitates cross-referencing.
+
+#(2 points) Based on the scatter plot from the previous question, describe any apparent relationship between Price and Quantity Sold. Include a cross-reference to the figure number in your response.
+
+#(1 point) Submit both your rendered HTML and the .qmd source file to Canvas for grading. Verify that your HTML document displays as expected before submission.
 ```
 
 
