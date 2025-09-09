@@ -7,6 +7,7 @@ format:
   html:
     toc: true
     embed-resources: true
+    df-print: paged
 editor: visual
 ---
 
@@ -21,6 +22,24 @@ library(tidyverse)
 ```
 
 ```{r}
-#data <- read.csv("datasets/sales_data.csv")
+sales_data <- read.csv("/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/sales_data.csv")
+head(sales_data)
+str(sales_data)
+#(1 point) Identify and remove any duplicate rows in the dataset using appropriate R functions.
+unique_sales_data <- unique(sales_data)
+#(1 point) Check for missing values in the dataset.
+anyNA(unique_sales_data)
+#(1 point) Filter the dataset to display only the sales made in New York.
+new_york_sales <- filter(unique_sales_data, Store.Location == "New York")
+new_york_sales
+#(1 point) Identify the date on which the highest total sale was recorded in New York.
+sorted_new_york_sales <- arrange(new_york_sales, desc(Total.Sales))
+sorted_new_york_sales[1,]["Date"]
+#(1 point) Determine the most frequently used payment method by customers.
+payment_methods <- select(unique_sales_data, Payment.Method)
+unique_payment_methods <- unique(payment_methods)
+match(payment_methods, unique_payment_methods)
+# referenced https://stackoverflow.com/questions/2547402/how-to-find-the-statistical-mode
 ```
+
 
