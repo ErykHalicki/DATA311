@@ -59,13 +59,15 @@ sprintf("%s is the most common payment method", mode_payment_method)
 par(pin = c(2, 2.25))  
 hist(unique_sales_data$Customer.Age, asp=5.0, xlim=c(20,50), ylim=c(0, 10), xlab="Customer Age")
 
-#plot(histogram, , , )
+```
+```{r}
+#| label: fig-scatter-quantity-price
+#| fig-cap: "Relationship between Quantity and Price"
 
 #(2 points) Create a scatter plot with Quantity Sold on the x-axis and Price on the y-axis. Ensure that all axis labels are clear and readable. Title the plot “Relationship between Quantity and Price” and label the chunk using the naming convention that facilitates cross-referencing.
-
-#(2 points) Based on the scatter plot from the previous question, describe any apparent relationship between Price and Quantity Sold. Include a cross-reference to the figure number in your response.
-
-#(1 point) Submit both your rendered HTML and the .qmd source file to Canvas for grading. Verify that your HTML document displays as expected before submission.
+par(pin = c(3, 3))
+plot(unique_sales_data$Quantity, unique_sales_data$Price, xlab="Quantity", ylab="Price", main="Relationship between Quantity and Price")
 ```
 
+As can be seen in @fig-scatter-quantity-price, there appears to be a negative correlation between quantity and price. As quantity increases, price decreases. Customers appear to be more likely to purchase higher quantities of products with lower prices.
 
