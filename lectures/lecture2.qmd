@@ -1,0 +1,5 @@
+```{r}
+library(ISLR)
+attach(Wage)
+str(Wage)
+```

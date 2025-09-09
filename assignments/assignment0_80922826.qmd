@@ -1,0 +1,26 @@
+---
+title: "Assignment 0"
+subtitle: "DATA 311"
+author: "Eryk Halicki (80922826)"
+table-of-contents: true
+format:
+  html:
+    toc: true
+    embed-resources: true
+editor: visual
+---
+
+# Introduction
+Hey, my name is **Eryk Halicki**, I'm a third year CS student at UBCO. I'm currently a technical director at the Okanagan Marine Robotics club, and am very interested in *robotics* and *ML / AI*, particularly the intersection between the two.
+
+![Photo of my clubs AUV](https://static.wixstatic.com/media/f0621d_34da9addbeef4f358d82a494528bce26~mv2.jpg/v1/fill/w_640,h_742,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/f0621d_34da9addbeef4f358d82a494528bce26~mv2.jpg)
+Above is a photo of my clubs robot / AUV (autonomous underwater vehicle) from 2024.
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+library(tidyverse)
+```
+
+```{r}
+#data <- read.csv("datasets/sales_data.csv")
+```
+
