@@ -56,6 +56,10 @@ mode_payment_method <- unique_payment_methods[which.max(tabulate(match(payment_m
 sprintf("%s is the most common payment method", mode_payment_method)
 
 #(2 points) Create a histogram of Customer Age and label the x-axis as “Customer Age”. Adjust the plot dimensions so that it is taller than it is wide.
+par(pin = c(2, 2.25))  
+hist(unique_sales_data$Customer.Age, asp=5.0, xlim=c(20,50), ylim=c(0, 10), xlab="Customer Age")
+
+#plot(histogram, , , )
 
 #(2 points) Create a scatter plot with Quantity Sold on the x-axis and Price on the y-axis. Ensure that all axis labels are clear and readable. Title the plot “Relationship between Quantity and Price” and label the chunk using the naming convention that facilitates cross-referencing.
 
