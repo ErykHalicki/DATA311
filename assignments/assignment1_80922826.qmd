@@ -1,0 +1,53 @@
+---
+title: "Assignment 1"
+author: "Eryk Halicki (80922826)"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    df-print: tibble
+    html-math-method: mathml
+execute:
+  echo: true
+---
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+library(tidyverse)
+```
+
+```{r}
+obesity <- read.csv('/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/ObesityDataSet_raw_and_data_sinthetic.csv')
+```
+
+The obesity dataset has `{r} nrow(obesity)` rows and `{r} ncol(obesity)` columns. Available variables:
+
+```{r}
+var_info <- data.frame(
+  Variable = colnames(obesity),
+  Type = sapply(obesity, class),
+  Description = c(
+    "Gender",
+    "Age",
+    "Height (cm)",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  )
+)
+
+var_info
+```
+
+Dataset is sourced from https://archive.ics.uci.edu/dataset/544/estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition
+
