@@ -18,24 +18,61 @@ library(tidyverse)
 ```{r}
 obesity <- read.csv('/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/ObesityDataSet_raw_and_data_sinthetic.csv')
 
+
 # Binary columns (yes/no)
 obesity[c("family_history_with_overweight", "FAVC", "SMOKE", "SCC")] <- 
   lapply(obesity[c("family_history_with_overweight", "FAVC", "SMOKE", "SCC")], factor)
 
-# Categorical columns
-obesity[c("Gender", "CAEC", "CALC", "MTRANS")] <- 
-  lapply(obesity[c("Gender", "CAEC", "CALC", "MTRANS")], factor)
+# Unordered categorical columns
+obesity[c("Gender", "MTRANS")] <- 
+  lapply(obesity[c("Gender", "MTRANS")], factor)
 
-# Integer columns
-obesity[c("FCVC", "NCP", "TUE")] <- 
-  lapply(obesity[c("FCVC", "NCP", "TUE")], as.integer)
+# Ordered categorical, binning continuous values
+obesity$FCVC <- cut(obesity$FCVC, 
+                    breaks = c(0, 1.5, 2.5, 3),
+                    labels = c("Never", "Sometimes", "Always"),
+                    include.lowest = TRUE,
+                    ordered_result = TRUE)
 
-obesity$NObeyesdad <- factor(obesity$NObeyesdad, 
-    levels = c("Insufficient_Weight", "Normal_Weight", 
-    "Overweight_Level_I", "Overweight_Level_II",
-    "Obesity_Type_I", "Obesity_Type_II", 
-    "Obesity_Type_III"),ordered = TRUE)
+obesity$NCP <- cut(obesity$NCP, 
+                   breaks = c(0, 1.5, 2.5, 4),
+                   labels = c("Between 1 and 2", "Three", "More than three"),
+                   include.lowest = TRUE,
+                   ordered_result = TRUE)
 
+obesity$CH2O <- cut(obesity$CH2O,
+                    breaks = c(0, 1.5, 2.5, 3),
+                    labels = c("Less than a liter", "Between 1 and 2 L", "More than 2 L"),
+                    include.lowest = TRUE,
+                    ordered_result = TRUE)
+
+obesity$FAF <- cut(obesity$FAF,
+                   breaks = c(0, 0.5, 1.5, 2.5, 3),
+                   labels = c("I do not have", "1 or 2 days", "2 or 4 days", "4 or 5 days"),
+                   include.lowest = TRUE,
+                   ordered_result = TRUE)
+
+obesity$TUE <- cut(obesity$TUE,
+                   breaks = c(0, 1, 1.5, 2),
+                   labels = c("0–2 hours", "3–5 hours", "More than 5 hours"),
+                   include.lowest = TRUE,
+                   ordered_result = TRUE)
+
+# CAEC and CALC are already categorical (text)
+obesity$CAEC <- factor(obesity$CAEC,
+                       levels = c("no", "Sometimes", "Frequently", "Always"),
+                       ordered = TRUE)
+
+obesity$CALC <- factor(obesity$CALC,
+                       levels = c("no", "Sometimes", "Frequently", "Always"),
+                       ordered = TRUE)
+
+obesity$NObeyesdad <- factor(obesity$NObeyesdad,
+                             levels = c("Insufficient_Weight", "Normal_Weight",
+                                       "Overweight_Level_I", "Overweight_Level_II",
+                                       "Obesity_Type_I", "Obesity_Type_II",
+                                       "Obesity_Type_III"),
+                             ordered = TRUE)
 var_info <- data.frame(
   Variable = colnames(obesity),
   Type = sapply(obesity, function(x) class(x)[1]), # rename
@@ -50,20 +87,42 @@ var_info <- data.frame(
     "How many main meals do you have daily?",
     "Do you eat any food between meals?",
     "Do you smoke?",
-    "How much water do you drink daily? (L)",
+    "How much water do you drink daily?",
     "Do you monitor the calories you eat daily?",
-    "How often do you have physical activity? (TODO FILL UNIT)",
+    "How often do you have physical activity?",
     "How much time do you use technological devices such as cell phone, videogames, television, computer and others? (Hours per week)",
     "How often do you drink alcohol?",
-    "Which transportation do you usually use?	",
+    "Which transportation do you usually use?",
     "Obesity level"
   )
 )
 ```
 
-This dataset contains data used to estimate the obesity levels in individuals from Mexico, Peru, and Columbia. The data is 77% synthetic and 23% was collected directly from users through a web platform. The dataset is sourced from https://archive.ics.uci.edu/dataset/544/estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition, and has `{r} nrow(obesity)` rows and `{r} ncol(obesity)` variables: 
+This dataset contains data used to estimate the obesity levels in individuals from Mexico, Peru, and Columbia. The data is 77% synthetic and 23% was collected directly from users through a web platform. The dataset is sourced from https://archive.ics.uci.edu/dataset/544/estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition, and has `{r} nrow(obesity)` rows and `{r} ncol(obesity)` variables. More detailed versions of the variable desciptions are available at https://doi.org/10.1016/j.dib.2019.104344.
 ```{r} 
 var_info
+
+obesity
+```
+
+There are `r sum(is.na(obesity))` rows with missing values, nothing needs to be removed.
+
+There are also `r sum(duplicated(obesity))` duplicated rows, but I dont believe we should remove them. Since there are no uniquely identifying features in the dataset (like name or a participant ID), it is entirely possible for the duplicates to be different individuals with the same responses. If we were to remove them, we could be skewing the data away from what was actually collected. 
+
+```{r}
+#| label: fig-scatter
+#| fig-cap: "BMI vs Age scatterplot"
+obesity$BMI <- obesity$Weight / (obesity$Height*obesity$Height)
+
+plot(obesity$Age, obesity$BMI, xlab = 'Age', ylab = 'BMI', main = 'BMI vs Age')
+```
+
+As can be seen in @fig-scatter, the relationship between BMI and Age in the obesity dataset seems to be weakly positive, however there is a lot of variability in the data, especially at lower ages (~18-25).
+
+I do not beleive that a linear model is appropriate for capturing the relationship between Age and BMI. Firstly, the data does not appear linearly correlated, since the weak positive relationship appears to become negative after age ~40. Furthermore, the data does not appear homoscedastic, since it becomes much tighter as Age increases (I.E. Funnel shaped).
+
+```{r}
+
 ```
 
 

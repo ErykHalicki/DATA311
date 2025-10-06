@@ -1,0 +1,4 @@
+```{r}
+advertising_data <- read.csv("/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/Advertising.csv")
+head(advertising_data)
+```
