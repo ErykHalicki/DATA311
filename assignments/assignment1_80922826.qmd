@@ -194,6 +194,81 @@ summary(bmi_multi_linear_model_2)
 According to the output of the summary function, All 3 variables included in the above model (Age, Gender, and family history) have a statistically signficant relationship with BMI. 
 
 ```{r}
-bmi_multi_linear_model_3 <- lm(BMI ~ Age + Gender + family_history_with_overweight + SCC, data = training_set)
+bmi_multi_linear_model_3 <- lm(BMI ~ Age + Gender + family_history_with_overweight + FAF, data = training_set)
 summary(bmi_multi_linear_model_3)
+bmi_multi_linear_model_3_coef <- coef(bmi_multi_linear_model_3)
 ```
+
+The predictor I included is the ordered categorical variable FAF (frequency of physical activity). From what I understand, ordered categorical variables get seperated into multiple polynomial equations when they get included in a linear model, so we have FAF.L, FAF.Q and FAF.C, with L = linear component, Q = quadratic component, C = cubic component. 
+
+From the p values of these 3 components, we can see that L is the most statistically signficant (p ~= 0), meaning that there is a signficant linear relationship between BMI and FAF, with one unit increase in FAF resulting in a `r bmi_multi_linear_model_3_coef[5][1]` change in BMI. 
+
+However, there is also a quadratic component; FAF.Q. This component is also statistically significant, showing that the relationship between BMI and FAF is not strictly linear, I.E. the rate of change of BMI changes at different level of FAF. There is also FAF.C for the cubic component, but it does not appear statistically significant.
+
+```{r}
+bmi_age_gender_linear_model <- lm(BMI ~ Age + Gender, data = training_set)
+summary(bmi_age_gender_linear_model)
+age_gender_linear_coef <- coef(bmi_age_gender_linear_model)
+```
+
+According to the above model using age and gender,
+$$
+\text{BMI} = 
+\begin{cases}
+`r age_gender_linear_coef[1]` + `r age_gender_linear_coef[2]` \times \text{Age} & \text{if female} \\
+`r age_gender_linear_coef[1]+age_gender_linear_coef[3]` + `r age_gender_linear_coef[2]` \times \text{Age} & \text{if male}
+\end{cases}
+$$
+
+```{r}
+bmi_age_gender_interaction_linear_model <- lm(BMI ~ Age + Gender + Age*Gender, data = training_set)
+summary(bmi_age_gender_interaction_linear_model)
+age_gender_interaction_linear_coef <- coef(bmi_age_gender_interaction_linear_model)
+```
+
+According to the above model using age, gender, and the interaction term Age*Gender,
+$$
+\text{BMI} = 
+\begin{cases}
+`r age_gender_interaction_linear_coef[1]` + `r age_gender_interaction_linear_coef[2]` \times \text{Age} & \text{if female} \\
+`r age_gender_interaction_linear_coef[1]+age_gender_interaction_linear_coef[3]` + `r age_gender_interaction_linear_coef[2] + age_gender_interaction_linear_coef[4]` \times \text{Age} & \text{if male}
+\end{cases}
+$$
+
+The p value of the Age*Gender term appears to be statistically significant, with p value ~= 0. This implies that in our model, Age has a different effect based on the gender we are trying to predict. I.E. the slope of Age is `r age_gender_interaction_linear_coef[4][1]` greater for males than females.
+
+```{r}
+plot(obesity$Age, obesity$BMI, xlab = 'Age', ylab = 'BMI')
+
+abline(a = age_gender_interaction_linear_coef[1],
+b = age_gender_interaction_linear_coef[2], 
+col = "red", 
+lwd=3)
+
+abline(a = age_gender_interaction_linear_coef[1]+age_gender_interaction_linear_coef[3],
+b = age_gender_interaction_linear_coef[2]+age_gender_interaction_linear_coef[4], col = "blue",
+lwd=3)
+
+legend("topleft", 
+       legend = c("Female", "Male"), 
+       col = c("red", "blue"), 
+       pch = 16, lwd = 2)
+
+female_38_year_old <- data.frame(
+  Age = 38,
+  Gender = "Female"
+)
+
+female_38_year_old_prediction <- predict(bmi_age_gender_interaction_linear_model, newdata = female_38_year_old)
+```
+
+The expected BMI of a 38 year old Female using the Age and BMI interaction model is `r female_38_year_old_prediction`.
+
+To verify, the expected value based on the equation from earlier is 
+
+$$ 
+`r age_gender_interaction_linear_coef[1]` + `r age_gender_interaction_linear_coef[2]` \times \text{Age}  \text{ if female}
+$$
+
+Which for a 38 year old female is: $`r age_gender_interaction_linear_coef[1]` + `r age_gender_interaction_linear_coef[2]` \times 38 = `r age_gender_interaction_linear_coef[1]+ age_gender_interaction_linear_coef[2]*38`$
+
