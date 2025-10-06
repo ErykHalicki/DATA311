@@ -12,7 +12,7 @@ execute:
 ---
 
 ```{r, echo=FALSE, warning=FALSE,message=FALSE}
-library(tidyverse)
+library(car)
 ```
 
 ```{r}
@@ -169,9 +169,31 @@ testing_set <- obesity[-train_indices, ]
 
 The training and testing sets have `r nrow(training_set)` and `r nrow(testing_set)` rows, respectively.
 
+```{r}
+bmi_age_linear_model <- lm(BMI ~ Age, training_set)
+summary(bmi_age_linear_model)
+bmi_age_linear_coeffs <- coef(bmi_age_linear_model)
+```
 
+As per the summary above, the estimated regression equation is BMI = `r  bmi_age_linear_coeffs[1]` + Age x `r bmi_age_linear_coeffs[2]`
 
+The slope of the equation can interpreted as the effect a one unit change in Age has on the expected BMI. I.E. for an increase of one year in age, the model predicts a `r bmi_age_linear_coeffs[2]` increase in BMI.
 
+```{r}
+bmi_multi_linear_model <- lm(BMI ~ . - BMI - Weight - Height - NObeyesdad, data = training_set)
+vif(bmi_multi_linear_model)
+```
 
+As can be seen in the output of the vif function, the GVIF^(1/(2*Df)) column (which from what I understand is like VIF, but for more types of variables), only has values very close to 1. This indicates that there is no evidence of probelmatic multicollinearity in the obesity dataset. This makes sense, since we removed the most correlated variables (weight, height, and obesity level), and the remaining variables are fairly independant from each other.
 
+```{r}
+bmi_multi_linear_model_2 <- lm(BMI ~ Age + Gender + family_history_with_overweight, data = training_set)
+summary(bmi_multi_linear_model_2)
+```
 
+According to the output of the summary function, All 3 variables included in the above model (Age, Gender, and family history) have a statistically signficant relationship with BMI. 
+
+```{r}
+bmi_multi_linear_model_3 <- lm(BMI ~ Age + Gender + family_history_with_overweight + SCC, data = training_set)
+summary(bmi_multi_linear_model_3)
+```
