@@ -122,8 +122,54 @@ As can be seen in @fig-scatter, the relationship between BMI and Age in the obes
 I do not beleive that a linear model is appropriate for capturing the relationship between Age and BMI. Firstly, the data does not appear linearly correlated, since the weak positive relationship appears to become negative after age ~40. Furthermore, the data does not appear homoscedastic, since it becomes much tighter as Age increases (I.E. Funnel shaped).
 
 ```{r}
+#| label: fig-boxplots
+#| fig-cap: 
+#|   - "BMI by Family History of Overweight"
+#|   - "BMI by High Caloric Food Consumption"
+#|   - "BMI by Smoking Status"
+#|   - "BMI by Calorie Monitoring"
+#|   - "BMI by Transportation Method"
+#|   - "BMI by Obesity Level"
+#|   - "BMI by Vegetable Consumption"
+#|   - "BMI by Number of Main Meals"
+#|   - "BMI by Eating Between Meals"
+#|   - "BMI by Water Consumption"
+#|   - "BMI by Physical Activity Frequency"
+#|   - "BMI by Technology Use"
+#|   - "BMI by Alcohol Consumption"
 
+#unordered
+boxplot(BMI ~ family_history_with_overweight, data = obesity)
+boxplot(BMI ~ FAVC, data = obesity)
+boxplot(BMI ~ SMOKE, data = obesity)
+boxplot(BMI ~ SCC, data = obesity)
+boxplot(BMI ~ MTRANS, data = obesity, cex.axis=0.8)
+boxplot(BMI ~ NObeyesdad, data = obesity, cex.axis=0.45)
+
+#ordered
+boxplot(BMI ~ FCVC, data=obesity)
+boxplot(BMI ~ NCP, data=obesity)
+boxplot(BMI ~ CAEC, data=obesity)
+boxplot(BMI ~ CH2O, data=obesity)
+boxplot(BMI ~ FAF, data=obesity)
+boxplot(BMI ~ TUE, data=obesity)
+boxplot(BMI ~ CALC, data=obesity)
 ```
+
+Although many of the boxplots show a relationship between BMI and their repsective category, BMI and family history of overweightness stands out to me. As can be seen in @fig-boxplots-1, there is a large difference between the mean of the two categories; participants without a family history of overweightness had a mean BMI of ~21, whereas participants with a family history of overweightness had a mean ~32. Furthermore, the 25th percentile of the "yes" category is higher than the 75th percetile of the "no" category. As such, I believe family history of overweightness is predictive of BMI, with respondants in the "yes" category having higher BMI's than those in the "no" category.
+
+```{r}
+set.seed(80922826)
+
+train_indices <- sample(1:nrow(obesity), size= 0.7*nrow(obesity))
+
+training_set <- obesity[train_indices, ]
+testing_set <- obesity[-train_indices, ]
+```
+
+The training and testing sets have `r nrow(training_set)` and `r nrow(testing_set)` rows, respectively.
+
+
 
 
 
