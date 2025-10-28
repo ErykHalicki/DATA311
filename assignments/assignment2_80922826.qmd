@@ -41,4 +41,55 @@ str(telco)
 ```
 Our dataset has `r nrow(telco)` rows before cleaning and `r ncol(telco)` columns. `r nrow(telco) - nrow(cleaned_telco)` rows contain NA values and will be removed.
 
+```{r}
+#| label: fig-barplot
+#| fig-cap:
+#|     - Churn Count
+telco <- cleaned_telco
+barplot(table(telco$Churn), xlab = 'Churned', ylab = 'Count', main = 'Churn Count')
+```
+As we can see in @fig-barplot, our classes are fairly unbalanced, with `r round(prop.table(table(telco$Churn))[1]*100, digits=2)`% of customers being in the "No" class.
+Since our classes are unbalanced, models may be biased toward predicting the majority class (usually "No"). Furthermore, high accuracy can be misleading (predicting "No" for everyone gives ~`r round(prop.table(table(telco$Churn))[1]*100, digits=0)`% accuracy). To address this, we should consider using balanced evaluation metrics like precision, recall, and F1-score rather than relying solely on accuracy.
 
+```{r}
+#| label: fig-barplot-1
+#| fig-width: 16
+#| fig-height: 16
+#| fig-cap:
+#|   - Churn vs Various Factors
+
+cat_vars <- names(telco)[sapply(telco, is.factor) & names(telco) != "Churn"]
+
+par(mfrow = c(4, 4), cex.main = 2.0, cex.lab = 1.3, cex.axis = 1.2)
+
+for (var in cat_vars) {
+  plot(telco[[var]], telco$Churn, 
+       main = paste("Churn Rate by", var),
+       xlab = var, 
+       ylab = "Churn",
+       col = c("lightblue", "salmon"))
+}
+
+```
+Looking at @fig-barplot-1 the following predictors have some relationship with churn, since there are unequal rates between of churn between levels: Senior Citizen, Partner, Dependents, Internet Service, Online Security, Online Backup, Device Protection, Tech Support, Streaming TV, Streaming Movies, Contract, Paperless Billing, and Payment Method.
+
+```{r}
+#| label: fig-barplot-2
+#| fig-width: 16
+#| fig-height: 16
+#| fig-cap:
+#|   - Churn vs Various Numerical Predictors
+cont_vars <- names(telco)[sapply(telco, is.numeric)]
+
+par(mfrow = c(2, 2))  # Adjust based on number of continuous variables
+
+for (var in cont_vars) {
+  boxplot(telco[[var]] ~ telco$Churn,
+          main = paste("Churn by", var),
+          xlab = "Churn",
+          ylab = var,
+          col = c("salmon", "lightblue"))
+}
+```
+
+As we can see in @fig-barplot-2, all 3 numerical predictors have differing means and ranges across the levels of churn. This implies there is some association between their value and churn, namely, customers who churned had lower tenure, lower total charges, and higher monthly charges on average.
