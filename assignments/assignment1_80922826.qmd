@@ -99,6 +99,7 @@ var_info <- data.frame(
 ```
 
 This dataset contains data used to estimate the obesity levels in individuals from Mexico, Peru, and Columbia. The data is 77% synthetic and 23% was collected directly from users through a web platform. The dataset is sourced from https://archive.ics.uci.edu/dataset/544/estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition, and has `{r} nrow(obesity)` rows and `{r} ncol(obesity)` variables. More detailed versions of the variable desciptions are available at https://doi.org/10.1016/j.dib.2019.104344.
+
 ```{r} 
 var_info
 
@@ -271,4 +272,65 @@ $$
 $$
 
 Which for a 38 year old female is: $`r age_gender_interaction_linear_coef[1]` + `r age_gender_interaction_linear_coef[2]` \times 38 = `r age_gender_interaction_linear_coef[1]+ age_gender_interaction_linear_coef[2]*38`$
+
+```{r}
+models <- list(
+  "Age only" = bmi_age_linear_model,
+  "Age + Gender + Family History" = bmi_multi_linear_model_2,
+  "Age + Gender + Family History + FAF" = bmi_multi_linear_model_3,
+  "Age + Gender" = bmi_age_gender_linear_model,
+  "Age + Gender + Interaction" = bmi_age_gender_interaction_linear_model
+)
+
+results <- data.frame(
+  Model = names(models),
+  Adj_R2 = numeric(length(models)),
+  Train_MSE = numeric(length(models)),
+  Test_MSE = numeric(length(models))
+)
+
+for(i in 1:length(models)) {
+  model <- models[[i]]
+  
+  # Adjusted R2
+  results$Adj_R2[i] <- summary(model)$adj.r.squared
+  
+  # Training MSE
+  train_pred <- predict(model)
+  results$Train_MSE[i] <- mean((training_set$BMI - train_pred)^2)
+  
+  # Test MSE
+  test_pred <- predict(model, newdata = testing_set)
+  results$Test_MSE[i] <- mean((testing_set$BMI - test_pred)^2)
+}
+
+results
+```
+
+I beleive the best model overall is the Age + Gender + Family History + FAF model. Its adjusted R^2 is greater than all the other models, and its train and test MSE are the lowest of all the models. 
+
+```{r}
+#| label: fig-bmi-diagnostics
+#| fig-cap: "Diagnostic plots for BMI linear regression model"
+#| fig-subcap:
+#|   - "Residuals vs Fitted"
+#|   - "Normal Q-Q"
+#|   - "Scale-Location"
+#|   - "Residuals vs Leverage"
+#| layout-ncol: 2
+
+plot(bmi_multi_linear_model_3)
+```
+
+In @fig-bmi-diagnostics-1 we can see that there is a non-constant variance between the fitted values and the residuals. There appears to be a funnel shape with variance increasing for higher BMI's, meaning that the model assumption of homoscedasticity is not met. Additionally, the red smoothed line shows a slight downward trend, suggesting mild non-linearity in the relationship. Overall, linearlity and homoscedasticity.
+
+In @fig-bmi-diagnostics-2, we can see that there are deviations on the high and low ends of the diagonal. This suggests the some presence of outliers or that the underlying error distribution is not perfectly Gaussian, which violates the normality assumption of linear regression. However, most residuals do follow the diagonal, so most of the dataset is fairly normal.
+
+The indpendance assumption is likely met since the dataset consists of cross-sectional observations from different individuals. The lack of systematic patterns in the residual plot further supports independence.
+
+## Bias Variance Tradeoff
+As we increase the amount of features used in our linear model, both adjusted R^2 and MSE improved. This indicates reduced bias, as the model better captures the underlying relationships in the training data. However, we can also expect that the models with more features have increased variance, since each variable used introduces a new source of model uncertainty, and makes the model more sensitive to the specific sample. 
+
+This illustrates the bias-variance tradeoff. While added complexity reduces systematic error (bias), it increases the model's sensitivity to sampling variation (variance), potentially reducing generalizability to new data.
+
 

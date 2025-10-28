@@ -1,0 +1,44 @@
+---
+title: "Assignment 2"
+author: "Eryk Halicki (80922826)"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    df-print: tibble
+    html-math-method: mathml
+execute:
+  echo: true
+---
+
+Since the assingment states we will use "logistic regression, K-Nearest Neighbors (KNN), and discriminant analysis to build predictive models" I believe this is A (Classification), C(Supervised), and D (Unsupervised). This is because logistic regression and LDA / QDA are supervised classification methods, and KNN is an unsupervised method. Furthermore, we are predicting a binary value (churn), indicating classification.
+
+```{r}
+telco <- read.csv('/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/Telco-Customer-Churn.csv')
+
+# Binary categorical columns -> factor
+telco[c("gender", "Partner", "Dependents", "PhoneService", "PaperlessBilling", "Churn")] <- 
+  lapply(telco[c("gender", "Partner", "Dependents", "PhoneService", "PaperlessBilling", "Churn")], factor)
+
+# SeniorCitizen is coded as 0/1 but should be factor
+telco$SeniorCitizen <- factor(telco$SeniorCitizen, levels = c(0, 1), labels = c("No", "Yes"))
+
+# Unordered categorical with 3+ levels
+telco[c("MultipleLines", "InternetService", "OnlineSecurity", "OnlineBackup", 
+        "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies", "PaymentMethod")] <- 
+  lapply(telco[c("MultipleLines", "InternetService", "OnlineSecurity", "OnlineBackup", 
+                 "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies", "PaymentMethod")], factor)
+
+# Ordered categorical
+telco$Contract <- factor(telco$Contract, 
+                         levels = c("Month-to-month", "One year", "Two year"),
+                         ordered = TRUE)
+
+# customerID stays as character (it's an identifier)
+# tenure, MonthlyCharges, TotalCharges stay numeric
+cleaned_telco <- na.omit(telco)
+str(telco)
+```
+Our dataset has `r nrow(telco)` rows before cleaning and `r ncol(telco)` columns. `r nrow(telco) - nrow(cleaned_telco)` rows contain NA values and will be removed.
+
+
