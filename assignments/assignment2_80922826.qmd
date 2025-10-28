@@ -93,3 +93,18 @@ for (var in cont_vars) {
 ```
 
 As we can see in @fig-barplot-2, all 3 numerical predictors have differing means and ranges across the levels of churn. This implies there is some association between their value and churn, namely, customers who churned had lower tenure, lower total charges, and higher monthly charges on average.
+
+```{r}
+set.seed(80922826)
+train_indices <- sample(1:nrow(telco), size= 0.7*nrow(telco))
+
+training_set <- telco[train_indices, ]
+testing_set <- telco[-train_indices, ]
+```
+Our training and testing sets have `r nrow(training_set)` and `r nrow(testing_set)` rows, respectively.
+
+```{r}
+logistic_model_1 <- glm(Churn~tenure+MonthlyCharges+TotalCharges, data=training_set, family='binomial')
+lm1_summary <- summary(logistic_model_1)
+```
+Based on the `lm1_summary`, 
