@@ -11,7 +11,7 @@ execute:
   echo: true
 ---
 
-Since the assingment states we will use "logistic regression, K-Nearest Neighbors (KNN), and discriminant analysis to build predictive models" I believe this is A (Classification), C(Supervised), and D (Unsupervised). This is because logistic regression and LDA / QDA are supervised classification methods, and KNN is an unsupervised method. Furthermore, we are predicting a binary value (churn), indicating classification.
+Since the assingment states we will use "logistic regression, K-Nearest Neighbors (KNN), and discriminant analysis to build predictive models" I believe this is A (Classification) and C(Supervised). This is because logistic regression, LDA / QDA, and KNN are supervised classification methods, since they all require labelled data. Furthermore, we are predicting a binary value (churn), indicating classification.
 
 ```{r}
 telco <- read.csv('/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/Telco-Customer-Churn.csv')
@@ -106,5 +106,103 @@ Our training and testing sets have `r nrow(training_set)` and `r nrow(testing_se
 ```{r}
 logistic_model_1 <- glm(Churn~tenure+MonthlyCharges+TotalCharges, data=training_set, family='binomial')
 lm1_summary <- summary(logistic_model_1)
+lm1_summary
 ```
-Based on the `lm1_summary`, 
+Based on the `lm1_summary`, we can see how the model parameters influence our predicted log-odds. We can see that with this model fit, our intercept value of `r coef(logistic_model_1)[1]` predicts that if all other predictors are 0's, P(churn) < 0.5 (since the log-odds are below 0). The tenure coefficient of `r coef(logistic_model_1)[2]` is negative, indicating that as tenure length increases, log-odds decreases (higher chance of not churning). The last 2 coefficients, `r coef(logistic_model_1)[3]`, `r coef(logistic_model_1)[4]` for MonthlyCharges and TotalCharges, respectively, are both positive, so both correspond to increased log-odds as the predictors increase (higher chance of churn).
+
+```{r}
+logistic_model_2 <- glm(Churn~tenure+Contract+SeniorCitizen+PaymentMethod+PaperlessBilling+InternetService, data=training_set, family='binomial')
+lm2_summary <- summary(logistic_model_2)
+lm2_summary
+```
+
+For my model, I selected the tenure, Contract, SeniorCitizen, PaymentMethod, PaperlessBilling, and InternetService predictors. My main selection criteria was checking the bar graphs and box plots for differences in churn rate between levels of each predictor. For example, in @fig-barplot-1, we can see that the levels of SeniorCitizen (Yes and No) have noticably different rates of churn, so it was added to the model. Although there were more predictors with noticably different rates of churn between levels, I selected only the ones most noticable to me to avoid including too many features (increasing model variance).
+```{r}
+cols_to_fix <- c("StreamingTV", "StreamingMovies","OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport")
+
+training_set[cols_to_fix] <- lapply(training_set[cols_to_fix], function(x) {
+  x <- as.character(x)
+  x[x == "No internet service"] <- "No"
+  factor(x)
+})
+
+testing_set[cols_to_fix] <- lapply(testing_set[cols_to_fix], function(x) {
+  x <- as.character(x)
+  x[x == "No internet service"] <- "No"
+  factor(x)
+})
+
+full_model <- glm(Churn ~ . - customerID - PhoneService,data = training_set, family = "binomial")
+
+null_model <- glm(Churn ~ 1, data = training_set, family = "binomial")
+
+# automatically doing forward and backward selection with our new features
+backward_model <- step(full_model, direction = "backward", trace = 0)
+forward_model <- step(null_model, direction = "forward", scope = formula(full_model), trace = 0)
+summary(backward_model)
+summary(forward_model)
+```
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE}
+library(class)
+library(caret)
+library(MASS)
+```
+```{r}
+dummies <- dummyVars(~ tenure+Contract+SeniorCitizen+PaymentMethod+PaperlessBilling+InternetService , data = training_set) # need to use dummy variables for all factors
+train_x <- predict(dummies, training_set)
+head(as.data.frame(train_x))
+train_y <- training_set$Churn
+
+cross_validation_k <- 10
+
+set.seed(80922826)
+folds <- createFolds(train_y, k = cross_validation_k)
+
+k_values <- seq(1, 100, by = 5)
+cv_errors <- numeric(length(k_values))
+
+for (i in 1:length(k_values)) {
+  knn_k <- k_values[i]
+  fold_errors <- numeric(cross_validation_k)
+  
+  for (fold in 1:cross_validation_k) {
+    val_indices <- folds[[fold]]
+    fold_train_x <- train_x[-val_indices, ]
+    fold_train_y <- train_y[-val_indices]
+    fold_val_x <- train_x[val_indices, ]
+    fold_val_y <- train_y[val_indices]
+    
+    knn_pred <- knn(train = fold_train_x, test = fold_val_x, cl = fold_train_y, k = knn_k)
+    
+    fold_errors[fold] <- 1-mean(knn_pred == fold_val_y)
+  }
+  
+  cv_errors[i] <- mean(fold_errors)
+}
+
+best_k <- k_values[which.min(cv_errors)]
+plot(k_values, cv_errors, type='b')
+```
+
+From our above cross validation, we can see that our best k value is `r best_k`, with values between 30-60 all having similar performance.
+
+```{r}
+set.seed(80922826)
+test_dummies <- dummyVars(~ tenure+Contract+SeniorCitizen+PaymentMethod+PaperlessBilling+InternetService , data = testing_set) 
+test_x <- predict(dummies, testing_set)
+test_y <- testing_set$Churn
+test_knn_preds <- knn(train = train_x, test = test_x, cl = train_y, k = best_k)
+test_error <- 1-mean(test_knn_preds == test_y)
+```
+
+Our final KNN model acheives a test error of `r test_error`.
+
+Setting a reproducible seed could be important for the KNN algorithm for 3 main reasons: training set split, cross validation set split, and tie-breaking. Firstly, our random seed determines what subset of our data will in the training set. This directly determines what points the KNN algorithm uses during prediction. Also, the random sampling in our cross-validation will impact the value of K we choose, influencing our model. The other part of the algorithm impacted by our seed would be tie breaking. In the case where a prediction is a tie between multiple classes, we need to randomly break the tie, which introduces non-determinism into our prediction, which is influenced by the random seed.
+
+
+```{r}
+lda_model <- lda(Churn ~ tenure + TotalCharges, data = training_set)
+qda_model <- qda(Churn ~ tenure + TotalCharges, data = training_set)
+```
+
