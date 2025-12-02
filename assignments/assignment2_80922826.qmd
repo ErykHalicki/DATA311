@@ -181,18 +181,18 @@ for (i in 1:length(k_values)) {
   cv_errors[i] <- mean(fold_errors)
 }
 
-best_k <- k_values[which.min(cv_errors)]
+best_knn_k <- k_values[which.min(cv_errors)]
 plot(k_values, cv_errors, type='b')
 ```
 
-From our above cross validation, we can see that our best k value is `r best_k`, with values between 30-60 all having similar performance.
+From our above cross validation, we can see that our best k value is `r best_knn_k`, with values between 30-60 all having similar performance.
 
 ```{r}
 set.seed(80922826)
 test_dummies <- dummyVars(~ tenure+Contract+SeniorCitizen+PaymentMethod+PaperlessBilling+InternetService , data = testing_set) 
 test_x <- predict(dummies, testing_set)
 test_y <- testing_set$Churn
-test_knn_preds <- knn(train = train_x, test = test_x, cl = train_y, k = best_k)
+test_knn_preds <- knn(train = train_x, test = test_x, cl = train_y, k = best_knn_k)
 test_error <- 1-mean(test_knn_preds == test_y)
 ```
 
@@ -206,3 +206,172 @@ lda_model <- lda(Churn ~ tenure + TotalCharges, data = training_set)
 qda_model <- qda(Churn ~ tenure + TotalCharges, data = training_set)
 ```
 
+## Model Evaluation
+
+```{r logistic-model-1-eval} 
+# take all trained models, run inference on test set
+# calculate confusion matrix
+# recall = TP / (TP + FN), predicted actual churn / (predicted actual churn + missed churn)
+actual_churn <- testing_set$Churn
+logistic_model_1_logits <- predict(logistic_model_1, newdata = testing_set)# if logits > 0, P(churn | x) > 0.5, so we predict churn
+logistic_model_1_preds <- factor(logistic_model_1_logits>0, levels= c(FALSE, TRUE), labels=c("No", "Yes"))
+logistic_model_1_TP <- length(which(logistic_model_1_preds == "Yes" & actual_churn == "Yes"))
+logistic_model_1_FN <- length(which(logistic_model_1_preds != "Yes" & actual_churn == "Yes"))
+logistic_model_1_recall <- logistic_model_1_TP / (logistic_model_1_TP + logistic_model_1_FN)
+table(logistic_model_1_preds, actual_churn)
+```
+
+```{r logistic-model-2-eval} 
+logistic_model_2_logits <- predict(logistic_model_2, newdata = testing_set) #returns logits
+logistic_model_2_preds <- factor(logistic_model_2_logits>0, levels= c(FALSE, TRUE), labels=c("No", "Yes"))# if logits > 0, P(churn | x) > 0.5, so we predict churn
+logistic_model_2_TP <- length(which(logistic_model_2_preds == "Yes" & actual_churn == "Yes"))
+logistic_model_2_FN <- length(which(logistic_model_2_preds != "Yes" & actual_churn == "Yes"))
+logistic_model_2_recall <- logistic_model_2_TP / (logistic_model_2_TP + logistic_model_2_FN)
+table(logistic_model_2_preds, actual_churn)
+```
+
+*Note: Instructions do not mention to evaluate backward and forward selection models from exercise 10, but I've opted to evaluate them out of curiosity.*
+```{r logistic-model-forward-eval} 
+logistic_model_forward_logits <- predict(forward_model, newdata = testing_set) #returns logits
+logistic_model_forward_preds <- factor(logistic_model_forward_logits>0, levels= c(FALSE, TRUE), labels=c("No", "Yes"))# if logits > 0, P(churn | x) > 0.5, so we predict churn
+logistic_model_forward_TP <- length(which(logistic_model_forward_preds == "Yes" & actual_churn == "Yes"))
+logistic_model_forward_FN <- length(which(logistic_model_forward_preds != "Yes" & actual_churn == "Yes"))
+logistic_model_forward_recall <- logistic_model_forward_TP / (logistic_model_forward_TP + logistic_model_forward_FN)
+table(logistic_model_forward_preds, actual_churn)
+```
+
+```{r logistic-model-backward-eval} 
+logistic_model_backward_logits <- predict(backward_model, newdata = testing_set) #returns logits
+logistic_model_backward_preds <- factor(logistic_model_backward_logits>0, levels= c(FALSE, TRUE), labels=c("No", "Yes"))# if logits > 0, P(churn | x) > 0.5, so we predict churn
+logistic_model_backward_TP <- length(which(logistic_model_backward_preds == "Yes" & actual_churn == "Yes"))
+logistic_model_backward_FN <- length(which(logistic_model_backward_preds != "Yes" & actual_churn == "Yes"))
+logistic_model_backward_recall <- logistic_model_backward_TP / (logistic_model_backward_TP + logistic_model_backward_FN)
+table(logistic_model_backward_preds, actual_churn)
+```
+
+```{r knn-eval} 
+dummies <- dummyVars(~ tenure+Contract+SeniorCitizen+PaymentMethod+PaperlessBilling+InternetService , data = training_set) # need to use dummy variables for all factors
+test_dummies <- dummyVars(~ tenure+Contract+SeniorCitizen+PaymentMethod+PaperlessBilling+InternetService , data = testing_set) # need to use dummy variables for all factors
+train_x <- predict(dummies, training_set)
+train_y <- training_set$Churn
+test_x <- predict(dummies, testing_set)
+test_y <- actual_churn
+test_knn_preds <- knn(train = train_x, test = test_x, cl = train_y, k = best_knn_k)
+knn_TP <- length(which(test_knn_preds == "Yes" & actual_churn == "Yes"))
+knn_FN <- length(which(test_knn_preds != "Yes" & actual_churn == "Yes"))
+knn_recall <- knn_TP / (knn_TP + knn_FN)
+table(test_knn_preds, actual_churn)
+```
+
+```{r lda-eval} 
+lda_preds <- predict(lda_model, newdata = testing_set)$class
+lda_TP <- length(which(lda_preds == "Yes" & actual_churn == "Yes"))
+lda_FN <- length(which(lda_preds != "Yes" & actual_churn == "Yes"))
+lda_recall <- lda_TP / (lda_TP + lda_FN)
+table(lda_preds, actual_churn)
+```
+
+```{r qda-eval} 
+qda_preds <- predict(qda_model, newdata = testing_set)$class
+qda_TP <- length(which(qda_preds == "Yes" & actual_churn == "Yes"))
+qda_FN <- length(which(qda_preds != "Yes" & actual_churn == "Yes"))
+qda_recall <- qda_TP / (qda_TP + qda_FN)
+table(qda_preds, actual_churn)
+```
+
+```r
+model_list <- c("Basic Logistic Regression", 
+                "My Logistic Regression Model", 
+                "Backward Stepwise Logistic Regression", 
+                "Forward Stepwise Logistic Regression", 
+                "KNN model",
+                "LDA",
+                "QDA")
+
+model_recalls <- c(logistic_model_1_recall,
+                   logistic_model_2_recall,
+                   logistic_model_backward_recall,
+                   logistic_model_forward_recall,
+                   knn_recall,
+                   lda_recall,
+                   qda_recall)
+
+model_recall_df <- data.frame(Model = model_list, 
+                               Recall = model_recalls)
+```
+: Model Recall Comparison on Test Set {#tbl-recall}
+
+| Model | Recall (on test set) |
+|-------|----------------------|
+| Basic Logistic Regression | `r logistic_model_1_recall` |
+| My Logistic Regression Model | `r logistic_model_2_recall` |
+| Backward Stepwise Logistic Regression | `r logistic_model_backward_recall` |
+| Forward Stepwise Logistic Regression | `r logistic_model_forward_recall` |
+| KNN model | `r knn_recall` |
+| LDA | `r lda_recall` |
+| QDA | `r qda_recall` |
+
+As we can see in @tbl-recall, our QDA model has the highest recall of all models at `r qda_recall`.
+
+### Bonus improved model
+Since the QDA model performed the best, I'll be fitting a new QDA model using a few predictors that were significant in our forward and backward selection models. 
+Although this doesnt guarentee the QDA model will improve, I beleive its a decent feature selection method.
+
+```{r}
+# Create dummy variables
+dummies <- dummyVars(~ tenure+TotalCharges+PaperlessBilling+Contract, data = training_set)
+test_dummies <- dummyVars(~ tenure+TotalCharges+PaperlessBilling+Contract, data = testing_set)
+
+train_x <- predict(dummies, training_set)
+train_y <- training_set$Churn
+test_x <- predict(test_dummies, testing_set)
+train_qda_data <- as.data.frame(train_x)
+train_qda_data$Churn <- train_y
+test_qda_data <- as.data.frame(test_x)
+
+head(test_qda_data)
+
+better_qda_model <- qda(Churn ~ tenure+TotalCharges+PaperlessBilling.Yes+Contract.L, data = train_qda_data)
+
+better_qda_preds <- predict(better_qda_model, newdata = test_qda_data)$class
+better_qda_TP <- length(which(better_qda_preds == "Yes" & actual_churn == "Yes"))
+better_qda_FN <- length(which(better_qda_preds != "Yes" & actual_churn == "Yes"))
+better_qda_recall <- better_qda_TP / (better_qda_TP + better_qda_FN)
+table(better_qda_preds, actual_churn)
+```
+
+Although using categorical / dummy variables kind of breaks the normality assumption of the QDA model, I was able to get improved performance by including some predictors from the forward and backward fit logistic regression models, namely PaperlessBilling and Contract. This improved my QDA model performance to a recall of `r better_qda_recall`.
+
+## Bootstrapping
+
+```{r}
+# resample test set B times with replacement
+# train qda model recall for all B resamples
+# evaluate recall on Out of Bag samples for each resample
+# calculate standard deviation from all B qda model recalls
+# get 95% confidence interval using 2.5 and 97.5 percentile values
+B <- 1000
+bootstrapped_recalls = numeric(B)
+for(i in 1:B){
+  train_indices <- sample(1:nrow(telco), nrow(telco), replace=TRUE)
+  train_data <- telco[train_indices, ]
+  test_indices <- setdiff(1:nrow(telco), unique(train_indices))
+  test_data <- telco[test_indices, ]
+  qda_model <- qda(Churn ~ tenure + TotalCharges, data = train_data)
+  actual_churn <- test_data$Churn
+  qda_preds <- predict(qda_model, newdata = test_data)$class
+  qda_TP <- length(which(qda_preds == "Yes" & actual_churn == "Yes"))
+  qda_FN <- length(which(qda_preds != "Yes" & actual_churn == "Yes"))
+  bootstrapped_recalls[i] <- qda_TP / (qda_TP + qda_FN)
+}
+head(bootstrapped_recalls)
+bootstrapped_recall_std_dev <- sd(bootstrapped_recalls)
+bootstrapped_recall_mean <- mean(bootstrapped_recalls)
+hist(bootstrapped_recalls)
+recall_conf_interval <- quantile(bootstrapped_recalls, c(0.025, 0.975))
+```
+
+*I wasn't entirely sure how to approach testing the models recall using bootstrapping (should I train and test on the same boostrapped sample?), so I used the internet to try and find an answer and ended up using the OOB approach (<https://en.wikipedia.org/wiki/Out-of-bag_error>). My main reasoning was that if we train and test the model on the same bootstrapped sample, we will end up with an overfit / overly optimistic estimate at every step. However, if we retrain the model on the bootstrapped sample, and then test on the data not included in the bootstrapped sample (Out of Bag data), then we shouldn't encounter any overfitting. My other intuition was to resample from just the test set, but that didnt follow the idea of treating the original sample as the population.*
+
+After running `r B` bootstrapped samples, we get a standard deviation of `r bootstrapped_recall_std_dev` and a mean of `r bootstrapped_recall_mean` for our recall.
+We also get a 95% confidence interval of (`r recall_conf_interval[1]` - `r recall_conf_interval[2]`)

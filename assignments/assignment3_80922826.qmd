@@ -1,0 +1,64 @@
+---
+title: "Assignment 3"
+author: "Eryk Halicki (80922826)"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    df-print: tibble
+    html-math-method: mathml
+execute:
+  echo: true
+---
+
+```{r,  echo=FALSE, warning=FALSE,message=FALSE}
+library(glmnet)    # For Ridge and Lasso regression
+library(caret)     # For data splitting and evaluation
+library(tidyverse) # For data manipulation and visualization
+library(randomForest)
+library(rpart)
+library(rpart.plot)
+
+STUDENT_NUMBER <- 80922826
+```
+
+```{r}
+dataset <- read.csv('/Users/erykhalicki/Documents/School/UBC/year3/DATA311/datasets/datasalaries.csv')
+dataset$company <- factor(dataset$company)
+dataset$gender <- factor(dataset$gender)
+dataset$Education <- factor(dataset$Education, levels=c("Highschool", "Some College", "Bachelor's Degree", "Master's Degree", "PhD"), ordered=TRUE)
+dataset$Race <- factor(dataset$Race)
+
+dataset <- unique(na.omit(dataset))
+
+str(dataset)
+
+set.seed(STUDENT_NUMBER + 2025)
+
+train_indices <- sample(nrow(dataset), nrow(dataset)*0.5)
+train <- dataset[train_indices, ]
+test <- dataset[-train_indices, ]
+```
+
+Training and test datasets have `r nrow(train)` and `r nrow(test)` rows, respectively.
+
+```{r}
+#| label: fig-tree-1
+#| fig-width: 5
+#| fig-height: 3
+#| fig-cap: rpart regression tree estimating salary
+cp <- 0.03
+tree.fit <- rpart(salary~., train, cp = cp)
+rpart.plot(tree.fit,type = 0, extra = 0)
+```
+
+With my chosen value of cp (`r cp`), I get a tree with 4 terminal nodes. At the first decision node, the tree splits samples by years of experience; for those with less than 9 years of experience, the tree predicts a salary of 203k per year. For those with more than 9 years of experience, the next decision nodes splits based on employer / company. Those who are employed by Apple, Amazon, Microsoft, or Oracle take the left branch, and receive an estimate of 283k per year. All remaining datapoints are split based on years at their respective company, with those who have less than 14 years of experience receiving an estimate of 427k a year, and those who have more than 14 years of experience receiving an estimate of 1.1 million per year.
+
+```{r}
+tree.predictions <- predict(tree.fit, new_data = test)
+tree.rmse <- RMSE(tree.predictions, test$salary)
+```
+
+Our tree receives a test set RMSE estimate of \$`r format(tree.rmse, scientific=FALSE)`. This indicates that on average, our model is \$`r format(tree.rmse, scientific=FALSE)` off of the true salary in our test set.
+
+```{r}
